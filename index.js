@@ -404,6 +404,12 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
+    // Acknowledge the interaction before deleting the reply
+    await interaction.reply({
+      content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
+      ephemeral: true,
+    });
+
     // Delete the user's command message
     await interaction.deleteReply();
 

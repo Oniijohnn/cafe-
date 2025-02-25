@@ -22,6 +22,19 @@ const client = new Client({
   ],
 });
 
+// AFK configuration
+let afkConfig = {
+  allowedRoles: [],
+  ignoredChannels: [],
+  ignoredRoles: [],
+};
+
+// Load AFK configuration from file if it exists
+const AFK_CONFIG_FILE = "afk_config.json";
+if (fs.existsSync(AFK_CONFIG_FILE)) {
+  afkConfig = JSON.parse(fs.readFileSync(AFK_CONFIG_FILE, "utf8"));
+}
+
 // ✅ Listen for message commands
 client.on("messageCreate", async (message) => {
   // Ignore messages from bots (to prevent infinite loops)
@@ -50,10 +63,18 @@ client.on("messageCreate", async (message) => {
 
   // Check if the author is AFK
   if (client.afkUsers && client.afkUsers[message.author.id]) {
-    const afkMessage = client.afkUsers[message.author.id];
-    delete client.afkUsers[message.author.id]; // Remove AFK status
+    const afkData = client.afkUsers[message.author.id];
 
-    await message.reply(`Welcome back, ${message.author}! You were AFK: ${afkMessage}`);
+    // Check if the message is in an ignored channel
+    if (!afkConfig.ignoredChannels.includes(message.channel.id)) {
+      delete client.afkUsers[message.author.id]; // Remove AFK status
+
+      // Restore original nickname
+      const member = message.guild.members.cache.get(message.author.id);
+      await member.setNickname(afkData.originalNickname);
+
+      await message.reply(`Welcome back, ${message.author}! I removed your AFK`);
+    }
   }
 
   // Check if the message contains "pogi" anywhere
@@ -105,7 +126,7 @@ client.on("guildMemberAdd", async (member) => {
           .replace("{user}", `<@${member.id}>`)
           .replace("{user_tag}", member.user.tag),
       )
-      .setColor(welcomeConfig.color || 0x00ff00)
+      .setColor(welcomeConfig.color || 0xd2b3b3) // Default color
       .setFooter({
         text: welcomeConfig.footer.replace(
           "{member_count}",
@@ -271,40 +292,20 @@ const commands = [
     ),
   new SlashCommandBuilder()
     .setName("blacklist")
-    .setDescription("Add or remove words from the blacklist.")
-    .addStringOption(option => 
-      option
-        .setName("action")
-        .setDescription("Add or remove")
-        .setRequired(true)
-        .addChoices(
-          { name: "Add", value: "add" },
-          { name: "Remove", value: "remove" },
-        )
-    )
+    .setDescription("Add a word to the blacklist.")
     .addStringOption(option => 
       option
         .setName("word")
-        .setDescription("The word to add or remove")
+        .setDescription("The word to add to the blacklist")
         .setRequired(true)
     ),
   new SlashCommandBuilder()
     .setName("whitelist")
-    .setDescription("Add or remove words from the whitelist.")
-    .addStringOption(option => 
-      option
-        .setName("action")
-        .setDescription("Add or remove")
-        .setRequired(true)
-        .addChoices(
-          { name: "Add", value: "add" },
-          { name: "Remove", value: "remove" },
-        )
-    )
+    .setDescription("Remove a word from the blacklist.")
     .addStringOption(option => 
       option
         .setName("word")
-        .setDescription("The word to add or remove")
+        .setDescription("The word to remove from the blacklist")
         .setRequired(true)
     ),
   new SlashCommandBuilder()
@@ -330,6 +331,27 @@ const commands = [
         .setName("reason")
         .setDescription("The reason for the report")
         .setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName("config-afk")
+    .setDescription("Configure AFK settings.")
+    .addRoleOption(option =>
+      option
+        .setName("allowed_roles")
+        .setDescription("Roles allowed to use AFK command")
+        .setRequired(false)
+    )
+    .addChannelOption(option =>
+      option
+        .setName("ignored_channels")
+        .setDescription("Channels where AFK status won't be removed")
+        .setRequired(false)
+    )
+    .addRoleOption(option =>
+      option
+        .setName("ignored_roles")
+        .setDescription("Roles ignored for AFK status")
+        .setRequired(false)
     ),
 ].map(command => command.toJSON());
 
@@ -357,13 +379,47 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName === "afk") {
     const afkMessage = interaction.options.getString("message") || "AFK";
     const userId = interaction.user.id;
+    const member = interaction.guild.members.cache.get(userId);
+
+    // Change user's nickname to include [AFK]
+    const originalNickname = member.nickname || interaction.user.username;
+    const afkNickname = `[AFK] ${originalNickname}`;
 
     // Store AFK status in memory or a database
     client.afkUsers = client.afkUsers || {};
-    client.afkUsers[userId] = afkMessage;
+    client.afkUsers[userId] = { message: afkMessage, originalNickname };
+
+    await member.setNickname(afkNickname);
+
+    // Delete the user's command message
+    await interaction.deleteReply();
+
+    // Send confirmation message to the channel
+    await interaction.channel.send({
+      content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
+    });
+  } else if (interaction.commandName === "config-afk") {
+    // Check for Admin permissions
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({
+        content: "❌ You need Administrator permissions to use this command.",
+        ephemeral: true,
+      });
+    }
+
+    const allowedRoles = interaction.options.getRole("allowed_roles");
+    const ignoredChannels = interaction.options.getChannel("ignored_channels");
+    const ignoredRoles = interaction.options.getRole("ignored_roles");
+
+    if (allowedRoles) afkConfig.allowedRoles = allowedRoles.map(role => role.id);
+    if (ignoredChannels) afkConfig.ignoredChannels = ignoredChannels.map(channel => channel.id);
+    if (ignoredRoles) afkConfig.ignoredRoles = ignoredRoles.map(role => role.id);
+
+    // Save AFK configuration to file
+    fs.writeFileSync(AFK_CONFIG_FILE, JSON.stringify(afkConfig, null, 2));
 
     await interaction.reply({
-      content: `✅ You are now AFK: ${afkMessage}`,
+      content: "✅ AFK configuration updated successfully!",
       ephemeral: true,
     });
   } else if (interaction.commandName === "test") {
@@ -388,7 +444,7 @@ client.on("interactionCreate", async (interaction) => {
             .replace("{user}", `<@${member.id}>`)
             .replace("{user_tag}", member.user.tag),
         )
-        .setColor(welcomeConfig.color || 0x00ff00)
+        .setColor(welcomeConfig.color || 0xd2b3b3) // Default color
         .setFooter({
           text: welcomeConfig.footer.replace(
             "{member_count}",
@@ -496,7 +552,7 @@ client.on("interactionCreate", async (interaction) => {
             ephemeral: true,
           });
         }
-        embed.setColor(parseInt(color.replace("#", ""), 16));
+        embed.setColor(parseInt(color.replace("#", ""), 16) || 0xd2b3b3); // Default color
 
         // ✅ Ensure at least one field is provided
         if (
@@ -645,16 +701,13 @@ client.on("interactionCreate", async (interaction) => {
     }
   } else if (interaction.commandName === "blacklist") {
     // ✅ Check for Admin permissions
-    if (
-      !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
-    ) {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
       return interaction.reply({
         content: "❌ You need Administrator permissions to use this command.",
         ephemeral: true,
       });
     }
 
-    const action = interaction.options.getString("action");
     const word = interaction.options.getString("word").toLowerCase();
 
     try {
@@ -662,34 +715,18 @@ client.on("interactionCreate", async (interaction) => {
         ? JSON.parse(fs.readFileSync("blacklist.json", "utf8"))
         : [];
 
-      if (action === "add") {
-        if (!blacklist.includes(word)) {
-          blacklist.push(word);
-          fs.writeFileSync("blacklist.json", JSON.stringify(blacklist, null, 2));
-          await interaction.reply({
-            content: `✅ The word "${word}" has been added to the blacklist.`,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            content: `❌ The word "${word}" is already in the blacklist.`,
-            ephemeral: true,
-          });
-        }
-      } else if (action === "remove") {
-        if (blacklist.includes(word)) {
-          blacklist = blacklist.filter((w) => w !== word);
-          fs.writeFileSync("blacklist.json", JSON.stringify(blacklist, null, 2));
-          await interaction.reply({
-            content: `✅ The word "${word}" has been removed from the blacklist.`,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            content: `❌ The word "${word}" is not in the blacklist.`,
-            ephemeral: true,
-          });
-        }
+      if (!blacklist.includes(word)) {
+        blacklist.push(word);
+        fs.writeFileSync("blacklist.json", JSON.stringify(blacklist, null, 2));
+        await interaction.reply({
+          content: `✅ The word "${word}" has been added to the blacklist.`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: `❌ The word "${word}" is already in the blacklist.`,
+          ephemeral: true,
+        });
       }
     } catch (error) {
       console.error("❌ Error updating blacklist:", error);
@@ -700,62 +737,43 @@ client.on("interactionCreate", async (interaction) => {
     }
   } else if (interaction.commandName === "whitelist") {
     // ✅ Check for Admin permissions
-    if (
-      !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
-    ) {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
       return interaction.reply({
         content: "❌ You need Administrator permissions to use this command.",
         ephemeral: true,
       });
     }
 
-    const action = interaction.options.getString("action");
     const word = interaction.options.getString("word").toLowerCase();
 
     try {
-      let whitelist = fs.existsSync("whitelist.json")
-        ? JSON.parse(fs.readFileSync("whitelist.json", "utf8"))
+      let blacklist = fs.existsSync("blacklist.json")
+        ? JSON.parse(fs.readFileSync("blacklist.json", "utf8"))
         : [];
 
-      if (action === "add") {
-        if (!whitelist.includes(word)) {
-          whitelist.push(word);
-          fs.writeFileSync("whitelist.json", JSON.stringify(whitelist, null, 2));
-          await interaction.reply({
-            content: `✅ The word "${word}" has been added to the whitelist.`,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            content: `❌ The word "${word}" is already in the whitelist.`,
-            ephemeral: true,
-          });
-        }
-      } else if (action === "remove") {
-        if (whitelist.includes(word)) {
-          whitelist = whitelist.filter((w) => w !== word);
-          fs.writeFileSync("whitelist.json", JSON.stringify(whitelist, null, 2));
-          await interaction.reply({
-            content: `✅ The word "${word}" has been removed from the whitelist.`,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            content: `❌ The word "${word}" is not in the whitelist.`,
-            ephemeral: true,
-          });
-        }
+      if (blacklist.includes(word)) {
+        blacklist = blacklist.filter((w) => w !== word);
+        fs.writeFileSync("blacklist.json", JSON.stringify(blacklist, null, 2));
+        await interaction.reply({
+          content: `✅ The word "${word}" has been removed from the blacklist.`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: `❌ The word "${word}" is not in the blacklist.`,
+          ephemeral: true,
+        });
       }
     } catch (error) {
-      console.error("❌ Error updating whitelist:", error);
+      console.error("❌ Error updating blacklist:", error);
       await interaction.reply({
-        content: "❌ An error occurred while updating the whitelist.",
+        content: "❌ An error occurred while updating the blacklist.",
         ephemeral: true,
       });
     }
   } else if (interaction.commandName === "help") {
     const embed = new EmbedBuilder()
-      .setColor(0x00ff00)
+      .setColor(0xd2b3b3) // Default color
       .setTitle("Bot Commands and Features")
       .setDescription("Here are all the commands and features of the bot:")
       .addFields(

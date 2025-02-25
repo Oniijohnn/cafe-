@@ -1,0 +1,8 @@
+{
+  "channelId": "996579657648455720",
+  "title": "Welcome to {server}!",
+  "description": "{user} joined the server!",
+  "thumbnail": "",
+  "footer": "We now have {member_count} members!",
+  "color": 65280
+}

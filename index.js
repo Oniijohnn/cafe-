@@ -406,7 +406,7 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // Acknowledge the interaction before deleting the reply
+    // Acknowledge the interaction
     await interaction.editReply({
       content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
       ephemeral: true,
@@ -796,16 +796,17 @@ client.on("interactionCreate", async (interaction) => {
       .setDescription("Here are all the commands and features of the bot:")
       .addFields(
         { name: "/test", value: "Manually triggers the welcome message." },
-        { name: "/setwelcome", value: "Configure the welcome embed." },
-        { name: "/post", value: "Post a message in a selected channel." },
-        { name: "/ban", value: "Ban a user from the server and delete their messages from the last 7 days." },
-        { name: "/timeout", value: "Timeout a user from the server for 60 seconds." },
-        { name: "/kick", value: "Kick a user from the server." },
-        { name: "/blacklist", value: "Add or remove words from the blacklist." },
-        { name: "/whitelist", value: "Add or remove words from the whitelist." },
+        { name: "/setwelcome 🛡️", value: "Configure the welcome embed." },
+        { name: "/post 🛡️", value: "Post a message in a selected channel." },
+        { name: "/ban 🛡️", value: "Ban a user from the server and delete their messages from the last 7 days." },
+        { name: "/timeout 🛡️", value: "Timeout a user from the server for 60 seconds." },
+        { name: "/kick 🛡️", value: "Kick a user from the server." },
+        { name: "/blacklist 🛡️", value: "Add a word to the blacklist." },
+        { name: "/whitelist 🛡️", value: "Remove a word from the blacklist." },
         { name: "/help", value: "Displays all commands and features of the bot." },
         { name: "/afk", value: "Set your status to AFK." },
-        { name: "/report", value: "Report a user to the support team." }
+        { name: "/report", value: "Report a user to the support team." },
+        { name: "/config-afk 🛡️", value: "Configure AFK settings." }
       );
 
     await interaction.reply({ embeds: [embed], ephemeral: false });

@@ -35,6 +35,24 @@ if (fs.existsSync(AFK_CONFIG_FILE)) {
   afkConfig = JSON.parse(fs.readFileSync(AFK_CONFIG_FILE, "utf8"));
 }
 
+// Utility function to format time difference
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  let interval = seconds / 60;
+  if (interval > 1) {
+    return `${Math.floor(interval)} minutes ago`;
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return `${Math.floor(interval)} hours ago`;
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return `${Math.floor(interval)} days ago`;
+  }
+  return `${Math.floor(seconds)} seconds ago`;
+}
+
 // ✅ Listen for message commands
 client.on("messageCreate", async (message) => {
   // Ignore messages from bots (to prevent infinite loops)
@@ -75,6 +93,24 @@ client.on("messageCreate", async (message) => {
 
       await message.reply(`Welcome back, ${message.author}! I removed your AFK`);
     }
+  }
+
+  // Check if the message mentions an AFK user
+  if (message.mentions.users.size > 0) {
+    message.mentions.users.forEach(async (user) => {
+      if (client.afkUsers && client.afkUsers[user.id]) {
+        const afkData = client.afkUsers[user.id];
+        const afkTime = timeSince(afkData.timestamp);
+
+        const embed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle(`${user.username} is AFK`)
+          .setDescription(`**Reason:** ${afkData.message}\n**Since:** ${afkTime}`)
+          .setFooter({ text: `Server: ${message.guild.name}` });
+
+        await message.reply({ embeds: [embed] });
+      }
+    });
   }
 
   // Check if the message contains "pogi" anywhere
@@ -389,7 +425,7 @@ client.on("interactionCreate", async (interaction) => {
 
     // Store AFK status in memory or a database
     client.afkUsers = client.afkUsers || {};
-    client.afkUsers[userId] = { message: afkMessage, originalNickname };
+    client.afkUsers[userId] = { message: afkMessage, originalNickname, timestamp: new Date() };
 
     try {
       await member.setNickname(afkNickname);
@@ -408,13 +444,13 @@ client.on("interactionCreate", async (interaction) => {
 
     // Acknowledge the interaction
     await interaction.editReply({
-      content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
+      content: `✅ <@${interaction.user.id}> is now AFK: ${afkMessage}`,
       ephemeral: true,
     });
 
     // Send confirmation message to the channel
     await interaction.channel.send({
-      content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
+      content: `✅ <@${interaction.user.id}> is now AFK: ${afkMessage}`,
     });
   } else if (interaction.commandName === "config-afk") {
     // Check for Admin permissions
@@ -890,7 +926,7 @@ console.log(`Bot is running on port: ${PORT}`);
 setInterval(() => {
   const memoryUsage = process.memoryUsage();
   console.log(`Memory Usage: RSS = ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB, Heap Total = ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB, Heap Used = ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB, External = ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`);
-}, 60000); // Log every 60 seconds
+}, 3600000); // Log every 1 hour
 
 // Log in the bot
 client.login(TOKEN);

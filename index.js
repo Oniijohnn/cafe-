@@ -916,17 +916,11 @@ client.once("ready", () => {
   setInterval(() => {
     const memoryUsage = process.memoryUsage();
     console.log(`Memory Usage: RSS = ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB, Heap Total = ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB, Heap Used = ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB, External = ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`);
-  }, 60000); // Log every 60 seconds
+  }, 3600000); // Log every 1 hour
 });
 
 // Check what port Render assigns
 console.log(`Bot is running on port: ${PORT}`);
-
-// Log memory usage at regular intervals
-setInterval(() => {
-  const memoryUsage = process.memoryUsage();
-  console.log(`Memory Usage: RSS = ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB, Heap Total = ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB, Heap Used = ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB, External = ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`);
-}, 3600000); // Log every 1 hour
 
 // Log in the bot
 client.login(TOKEN);

@@ -441,6 +441,14 @@ client.on("interactionCreate", async (interaction) => {
       ephemeral: true,
     });
   } else if (interaction.commandName === "test") {
+    // Check for Admin permissions
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({
+        content: "❌ You need Administrator permissions to use this command.",
+        ephemeral: true,
+      });
+    }
+
     try {
       const guild = interaction.guild;
       const welcomeChannel = guild.channels.cache.get(welcomeConfig.channelId);
@@ -495,41 +503,41 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
   } else if (interaction.commandName === "post") {
+    // ✅ Check for Admin permissions
+    if (
+      !interaction.member.permissions.has(
+        PermissionsBitField.Flags.Administrator,
+      )
+    ) {
+      return interaction.reply({
+        content: "❌ You need Administrator permissions to use this command.",
+        ephemeral: true,
+      });
+    }
+
+    // ✅ Get command options
+    const channelOption = interaction.options.getChannel("channel");
+    const messageType = interaction.options.getString("type");
+    const messageContent = interaction.options.getString("message");
+    const title = interaction.options.getString("title") || null;
+    const description = interaction.options.getString("description") || null;
+    const color = interaction.options.getString("color") || "#FFFFFF";
+    const footer = interaction.options.getString("footer") || null;
+    const imageUrl = interaction.options.getString("image") || null;
+    const thumbnailUrl = interaction.options.getString("thumbnail") || null;
+
+    // ✅ Validate the selected channel
+    if (!channelOption || !channelOption.isTextBased()) {
+      return interaction.reply({
+        content: "❌ Please provide a valid text channel.",
+        ephemeral: true,
+      });
+    }
+
+    // ✅ Acknowledge interaction immediately
+    await interaction.deferReply({ ephemeral: true });
+
     try {
-      // ✅ Check for Admin permissions
-      if (
-        !interaction.member.permissions.has(
-          PermissionsBitField.Flags.Administrator,
-        )
-      ) {
-        return interaction.reply({
-          content: "❌ You need Administrator permissions to use this command.",
-          ephemeral: true,
-        });
-      }
-
-      // ✅ Get command options
-      const channelOption = interaction.options.getChannel("channel");
-      const messageType = interaction.options.getString("type");
-      const messageContent = interaction.options.getString("message");
-      const title = interaction.options.getString("title") || null;
-      const description = interaction.options.getString("description") || null;
-      const color = interaction.options.getString("color") || "#FFFFFF";
-      const footer = interaction.options.getString("footer") || null;
-      const imageUrl = interaction.options.getString("image") || null;
-      const thumbnailUrl = interaction.options.getString("thumbnail") || null;
-
-      // ✅ Validate the selected channel
-      if (!channelOption || !channelOption.isTextBased()) {
-        return interaction.reply({
-          content: "❌ Please provide a valid text channel.",
-          ephemeral: true,
-        });
-      }
-
-      // ✅ Acknowledge interaction immediately
-      await interaction.deferReply({ ephemeral: true });
-
       if (messageType === "text") {
         if (!messageContent) {
           return interaction.editReply({
@@ -795,7 +803,7 @@ client.on("interactionCreate", async (interaction) => {
       .setTitle("Bot Commands and Features")
       .setDescription("Here are all the commands and features of the bot:")
       .addFields(
-        { name: "/test", value: "Manually triggers the welcome message." },
+        { name: "/test 🛡️", value: "Manually triggers the welcome message." },
         { name: "/setwelcome 🛡️", value: "Configure the welcome embed." },
         { name: "/post 🛡️", value: "Post a message in a selected channel." },
         { name: "/ban 🛡️", value: "Ban a user from the server and delete their messages from the last 7 days." },
@@ -803,10 +811,10 @@ client.on("interactionCreate", async (interaction) => {
         { name: "/kick 🛡️", value: "Kick a user from the server." },
         { name: "/blacklist 🛡️", value: "Add a word to the blacklist." },
         { name: "/whitelist 🛡️", value: "Remove a word from the blacklist." },
+        { name: "/config-afk 🛡️", value: "Configure AFK settings." },
         { name: "/help", value: "Displays all commands and features of the bot." },
         { name: "/afk", value: "Set your status to AFK." },
-        { name: "/report", value: "Report a user to the support team." },
-        { name: "/config-afk 🛡️", value: "Configure AFK settings." }
+        { name: "/report", value: "Report a user to the support team." }
       );
 
     await interaction.reply({ embeds: [embed], ephemeral: false });

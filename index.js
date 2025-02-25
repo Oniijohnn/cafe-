@@ -377,6 +377,8 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "afk") {
+    await interaction.deferReply({ ephemeral: true }); // Acknowledge the interaction
+
     const afkMessage = interaction.options.getString("message") || "AFK";
     const userId = interaction.user.id;
     const member = interaction.guild.members.cache.get(userId);
@@ -394,7 +396,7 @@ client.on("interactionCreate", async (interaction) => {
     } catch (error) {
       if (error.code === 50013) {
         console.error("❌ Missing Permissions to change nickname:", error);
-        await interaction.reply({
+        await interaction.editReply({
           content: "❌ I don't have permission to change your nickname.",
           ephemeral: true,
         });
@@ -405,13 +407,10 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // Acknowledge the interaction before deleting the reply
-    await interaction.reply({
+    await interaction.editReply({
       content: `✅ ${interaction.user.username} is now AFK: ${afkMessage}`,
       ephemeral: true,
     });
-
-    // Delete the user's command message
-    await interaction.deleteReply();
 
     // Send confirmation message to the channel
     await interaction.channel.send({

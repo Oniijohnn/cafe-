@@ -389,7 +389,20 @@ client.on("interactionCreate", async (interaction) => {
     client.afkUsers = client.afkUsers || {};
     client.afkUsers[userId] = { message: afkMessage, originalNickname };
 
-    await member.setNickname(afkNickname);
+    try {
+      await member.setNickname(afkNickname);
+    } catch (error) {
+      if (error.code === 50013) {
+        console.error("❌ Missing Permissions to change nickname:", error);
+        await interaction.reply({
+          content: "❌ I don't have permission to change your nickname.",
+          ephemeral: true,
+        });
+        return;
+      } else {
+        throw error;
+      }
+    }
 
     // Delete the user's command message
     await interaction.deleteReply();

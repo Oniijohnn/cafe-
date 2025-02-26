@@ -4,6 +4,11 @@ import { Client, GatewayIntentBits, REST, Routes, EmbedBuilder, PermissionsBitFi
 import dotenv from "dotenv";
 import fs from "fs";
 import { SlashCommandBuilder } from "@discordjs/builders";
+import { afkCommands, handleAfkCommand, handleAfkRemoveCommand, handleConfigAfkCommand } from "./commands/afkCommands.js";
+import { welcomeCommands, handleTestCommand, handleSetWelcomeCommand } from "./commands/welcomeCommands.js";
+import { moderationCommands, handleBanCommand, handleTimeoutCommand, handleKickCommand, handleWarnCommand } from "./commands/moderationCommands.js";
+import { blacklistCommands, handleBlacklistCommand, handleWhitelistCommand } from "./commands/blacklistCommands.js";
+import { reportCommand, handleReportCommand } from "./commands/reportCommand.js";
 
 dotenv.config(); // Load environment variables
 
@@ -419,6 +424,7 @@ const commands = [
         .setDescription("Roles ignored for AFK status")
         .setRequired(false)
     ),
+  ...afkCommands,
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -443,69 +449,11 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "afk") {
-    await interaction.deferReply({ ephemeral: true }); // Acknowledge the interaction
-
-    const afkMessage = interaction.options.getString("message") || "AFK";
-    const userId = interaction.user.id;
-    const member = interaction.guild.members.cache.get(userId);
-
-    // Change user's nickname to include [AFK]
-    const originalNickname = member.nickname || interaction.user.username;
-    const afkNickname = `[AFK] ${originalNickname}`;
-
-    // Store AFK status in memory or a database
-    client.afkUsers = client.afkUsers || {};
-    client.afkUsers[userId] = { message: afkMessage, originalNickname, timestamp: new Date() };
-
-    try {
-      await member.setNickname(afkNickname);
-    } catch (error) {
-      if (error.code === 50013) {
-        console.error("❌ Missing Permissions to change nickname:", error);
-        await interaction.editReply({
-          content: "❌ I don't have permission to change your nickname.",
-          ephemeral: true,
-        });
-        return;
-      } else {
-        throw error;
-      }
-    }
-
-    // Acknowledge the interaction
-    await interaction.editReply({
-      content: `✅ <@${interaction.user.id}> is now AFK: ${afkMessage}`,
-      ephemeral: true,
-    });
-
-    // Send confirmation message to the channel
-    await interaction.channel.send({
-      content: `✅ <@${interaction.user.id}> is now AFK: ${afkMessage}`,
-    });
+    await handleAfkCommand(interaction, client);
+  } else if (interaction.commandName === "afk-remove") {
+    await handleAfkRemoveCommand(interaction, client);
   } else if (interaction.commandName === "config-afk") {
-    // Check for Admin permissions
-    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.reply({
-        content: "❌ You need Administrator permissions to use this command.",
-        ephemeral: true,
-      });
-    }
-
-    const allowedRoles = interaction.options.getRole("allowed_roles");
-    const ignoredChannels = interaction.options.getChannel("ignored_channels");
-    const ignoredRoles = interaction.options.getRole("ignored_roles");
-
-    if (allowedRoles) afkConfig.allowedRoles = allowedRoles.map(role => role.id);
-    if (ignoredChannels) afkConfig.ignoredChannels = ignoredChannels.map(channel => channel.id);
-    if (ignoredRoles) afkConfig.ignoredRoles = ignoredRoles.map(role => role.id);
-
-    // Save AFK configuration to file
-    fs.writeFileSync(AFK_CONFIG_FILE, JSON.stringify(afkConfig, null, 2));
-
-    await interaction.reply({
-      content: "✅ AFK configuration updated successfully!",
-      ephemeral: true,
-    });
+    await handleConfigAfkCommand(interaction);
   } else if (interaction.commandName === "test") {
     // Check for Admin permissions
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {

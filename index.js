@@ -71,7 +71,7 @@ client.on("messageCreate", async (message) => {
     await message.delete(); // Delete the message
 
     const embed = new EmbedBuilder()
-      .setColor(0xff0000)
+      .setColor(0xd2b3b3)
       .setTitle("Warning")
       .setDescription(`That word is not allowed here, ${message.author}.`);
 
@@ -103,7 +103,7 @@ client.on("messageCreate", async (message) => {
         const afkTime = timeSince(afkData.timestamp);
 
         const embed = new EmbedBuilder()
-          .setColor(0xffa500)
+          .setColor(0xd2b3b3)
           .setTitle(`${user.username} is AFK`)
           .setDescription(`**Reason:** ${afkData.message}\n**Since:** ${afkTime}`)
           .setFooter({ text: `Server: ${message.guild.name}` });
@@ -943,7 +943,7 @@ client.on("interactionCreate", async (interaction) => {
 
       if (supportChannel) {
         const reportEmbed = new EmbedBuilder()
-          .setColor(0xff0000)
+          .setColor(0xd2b3b3)
           .setTitle("New User Report")
           .setDescription(`**Reported User:** <@${reportedUser.id}>\n**Reason:** ${reason}\n**Reported By:** <@${interaction.user.id}>`)
           .setTimestamp();

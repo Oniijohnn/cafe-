@@ -435,11 +435,17 @@ const commands = [
   ...afkCommands,
 ];
 
+// Log the full structure of commands
+console.dir(commands, { depth: null });
+
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 async function registerCommands() {
   try {
     const formattedCommands = formatCommands(commands);
+
+    // Log the formatted commands
+    console.log(JSON.stringify(formattedCommands, null, 2));
 
     await rest.put(
       Routes.applicationCommands(CLIENT_ID),

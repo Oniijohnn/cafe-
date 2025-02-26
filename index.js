@@ -375,6 +375,15 @@ const commands = [
         .setRequired(false)
     ),
   new SlashCommandBuilder()
+    .setName("afk-remove")
+    .setDescription("Remove AFK status from a user.")
+    .addUserOption(option =>
+      option
+        .setName("user")
+        .setDescription("The user to remove AFK status from")
+        .setRequired(true)
+    ),
+  new SlashCommandBuilder()
     .setName("report")
     .setDescription("Report a user to the support team.")
     .addUserOption(option =>
@@ -903,19 +912,18 @@ client.on("interactionCreate", async (interaction) => {
       .setTitle("Bot Commands and Features")
       .setDescription("Here are all the commands and features of the bot:")
       .addFields(
-        { name: "/test 🛡️", value: "Test welcome embed." },
+        { name: "/test 🛡️", value: "Manually triggers the welcome message." },
         { name: "/setwelcome 🛡️", value: "Configure the welcome embed." },
         { name: "/post 🛡️", value: "Post a message in a selected channel." },
-        { name: "/ban 🛡️", value: "Ban a user from the server and delete their messages from the last 7 days." },
-        { name: "/timeout 🛡️", value: "Timeout a user from the server for 60 seconds." },
+        { name: "/ban 🛡️", value: "Ban a user from the server and optionally delete their messages from the last 7 days." },
+        { name: "/timeout 🛡️", value: "Timeout a user from the server for a specified duration." },
         { name: "/kick 🛡️", value: "Kick a user from the server." },
-        { name: "/blacklist 🛡️", value: "Add a word to the blacklist." },
-        { name: "/whitelist 🛡️", value: "Remove a word from the blacklist." },
-        { name: "/config-afk 🛡️", value: "Configure AFK settings." },
-        { name: "/help", value: "Displays all commands and features of the bot." },
+        { name: "/warn 🛡️", value: "Warn a user." },
         { name: "/afk", value: "Set your status to AFK." },
+        { name: "/afk-remove 🛡️", value: "Remove AFK status from a user." },
         { name: "/report", value: "Report a user to the support team." }
-      );
+      )
+      .setFooter({ text: `{server_name}`, iconURL: `{server_icon}` });
 
     await interaction.reply({ embeds: [embed], ephemeral: false });
   } else if (interaction.commandName === "report") {
@@ -926,9 +934,10 @@ client.on("interactionCreate", async (interaction) => {
     try {
       // Send report to support team
       const supportRole = interaction.guild.roles.cache.get(supportRoleId);
-      const supportChannel = interaction.guild.channels.cache.find(channel => channel.name === "support"); // Replace with your support channel name
+      const supportChannelId = "1237737011603836958"; // Report channel ID
+      const supportChannel = interaction.guild.channels.cache.get(supportChannelId);
 
-      if (supportRole && supportChannel) {
+      if (supportChannel) {
         const reportEmbed = new EmbedBuilder()
           .setColor(0xff0000)
           .setTitle("New User Report")
@@ -951,6 +960,33 @@ client.on("interactionCreate", async (interaction) => {
       console.error("❌ Error handling report:", error);
       await interaction.reply({
         content: "❌ An error occurred while submitting your report.",
+        ephemeral: true,
+      });
+    }
+  } else if (interaction.commandName === "afk-remove") {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({
+        content: "❌ You need Administrator permissions to use this command.",
+        ephemeral: true,
+      });
+    }
+
+    const user = interaction.options.getUser("user");
+
+    if (client.afkUsers && client.afkUsers[user.id]) {
+      const afkData = client.afkUsers[user.id];
+      delete client.afkUsers[user.id];
+
+      const member = await interaction.guild.members.fetch(user.id);
+      await member.setNickname(afkData.originalNickname);
+
+      await interaction.reply({
+        content: `✅ AFK status removed from ${user.tag}.`,
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: `❌ ${user.tag} is not AFK.`,
         ephemeral: true,
       });
     }

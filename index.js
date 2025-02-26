@@ -12,6 +12,13 @@ import { reportCommand, handleReportCommand } from "./commands/reportCommand.js"
 
 dotenv.config(); // Load environment variables
 
+// ✅ Add these logs to check if commands are being imported properly:
+console.log("AFK Commands:", afkCommands);
+console.log("Welcome Commands:", welcomeCommands);
+console.log("Moderation Commands:", moderationCommands);
+console.log("Blacklist Commands:", blacklistCommands);
+console.log("Report Command:", reportCommand);
+
 // Load bot token from .env file
 const TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = "1318911111969374229";

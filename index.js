@@ -907,8 +907,12 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
   } else if (interaction.commandName === "help") {
+    const guild = interaction.guild;
+    const serverName = guild.name;
+    const serverIcon = guild.iconURL({ format: "png", dynamic: true, size: 512 });
+
     const embed = new EmbedBuilder()
-      .setColor(0xd2b3b3) // Default color
+      .setColor(0xd2b3b3)
       .setTitle("Bot Commands and Features")
       .setDescription("Here are all the commands and features of the bot:")
       .addFields(
@@ -919,11 +923,11 @@ client.on("interactionCreate", async (interaction) => {
         { name: "/timeout 🛡️", value: "Timeout a user from the server for a specified duration." },
         { name: "/kick 🛡️", value: "Kick a user from the server." },
         { name: "/warn 🛡️", value: "Warn a user." },
-        { name: "/afk", value: "Set your status to AFK." },
         { name: "/afk-remove 🛡️", value: "Remove AFK status from a user." },
+        { name: "/afk", value: "Set your status to AFK." },
         { name: "/report", value: "Report a user to the support team." }
       )
-      .setFooter({ text: `{server_name}`, iconURL: `{server_icon}` });
+      .setFooter({ text: serverName, iconURL: serverIcon });
 
     await interaction.reply({ embeds: [embed], ephemeral: false });
   } else if (interaction.commandName === "report") {

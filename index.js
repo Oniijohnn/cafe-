@@ -433,20 +433,12 @@ const commands = [
         .setRequired(false)
     ),
   ...afkCommands,
-].map(command => {
-  // Ensure command is JSON-compatible
-  const jsonCompatibleCommand = command.toJSON ? command.toJSON() : JSON.stringify(command);
-  return jsonCompatibleCommand;
-});
+].map(command => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 async function registerCommands() {
   try {
-    const commands = [
-      // ...existing command objects...
-    ];
-
     const formattedCommands = formatCommands(commands);
 
     await rest.put(

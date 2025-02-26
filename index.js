@@ -425,7 +425,11 @@ const commands = [
         .setRequired(false)
     ),
   ...afkCommands,
-].map(command => command.toJSON());
+].map(command => {
+  // Ensure command is JSON-compatible
+  const jsonCompatibleCommand = command.toJSON ? command.toJSON() : JSON.stringify(command);
+  return jsonCompatibleCommand;
+});
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 

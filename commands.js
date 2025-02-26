@@ -8,7 +8,7 @@ commands.push({
   options: [],
 });
 
-// Ensure no duplicate names
+// Ensure no duplicate names and correct structure
 commands.push({
   name: "afk-remove",
   description: "Remove your AFK status.",

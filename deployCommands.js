@@ -15,6 +15,9 @@ const rest = new REST({ version: '9' }).setToken(TOKEN);
     // Clear old commands
     await require('./clearCommands');
 
+    // Log command data
+    console.log('Commands:', JSON.stringify(commands, null, 2));
+
     // Register new commands
     await rest.put(
       Routes.applicationCommands(CLIENT_ID),
@@ -23,6 +26,6 @@ const rest = new REST({ version: '9' }).setToken(TOKEN);
 
     console.log('Successfully reloaded application (/) commands.');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering commands:', error);
   }
 })();

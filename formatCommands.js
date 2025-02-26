@@ -1,10 +1,9 @@
-
 /**
  * Formats the commands to ensure they are in the correct object format.
  * @param {Array} commands - The array of command objects.
  * @returns {Array} - The formatted array of command objects.
  */
-function formatCommands(commands) {
+export default function formatCommands(commands) {
   return commands.map(command => {
     return {
       name: command.name,
@@ -15,5 +14,3 @@ function formatCommands(commands) {
     };
   });
 }
-
-module.exports = formatCommands;

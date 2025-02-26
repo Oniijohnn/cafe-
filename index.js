@@ -433,7 +433,7 @@ const commands = [
         .setRequired(false)
     ),
   ...afkCommands,
-].map(command => command.toJSON());
+];
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
@@ -459,7 +459,7 @@ async function registerCommands() {
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
     // Register new commands
     await rest.put(Routes.applicationCommands(CLIENT_ID), {
-      body: commands, 
+      body: formatCommands(commands), 
     });
     console.log("Slash commands registered!");
   } catch (error) {

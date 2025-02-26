@@ -5,12 +5,9 @@
  */
 export default function formatCommands(commands) {
   return commands.map(command => {
-    return {
-      name: command.name,
-      description: command.description,
-      options: command.options || [],
-      type: command.type,
-      // Add other necessary properties here
-    };
+    if (typeof command.toJSON === 'function') {
+      return command.toJSON();
+    }
+    return command;
   });
 }

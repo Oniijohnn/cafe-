@@ -17,7 +17,7 @@ async function handleHelpCommand(interaction) {
       { name: "/ban", value: "Ban a user from the server." },
       { name: "/timeout", value: "Timeout a user from the server." },
       { name: "/kick", value: "Kick a user from the server." },
-      { name: "/warn", value: "Warn a user." },
+      { name: "/warn", value: "Warn a user." }, // Updated description
       { name: "/afk", value: "Set your status to AFK." },
       { name: "/afk-remove", value: "Remove AFK status from a user." },
       { name: "/blacklist", value: "Add a word to the blacklist." },

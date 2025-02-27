@@ -4,7 +4,15 @@ const commands = [];
 commands.push({
   name: "afk",
   description: "Set your status to AFK.",
-  options: [],
+  type: 1, // Slash command type
+  options: [
+    {
+      name: "message",
+      description: "Your AFK message",
+      type: 3, // STRING type
+      required: false,
+    },
+  ],
 });
 
 commands.push({

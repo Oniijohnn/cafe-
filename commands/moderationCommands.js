@@ -37,7 +37,7 @@ const moderationCommands = [
     ),
   new SlashCommandBuilder()
     .setName("warn")
-    .setDescription("Warn a user.")
+    .setDescription("Warning a user.") // Updated description
     .addUserOption((option) =>
       option.setName("user").setDescription("The user to warn").setRequired(true),
     ),

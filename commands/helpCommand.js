@@ -21,7 +21,7 @@ async function handleHelpCommand(interaction) {
       { name: "/afk-remove", value: "Remove AFK status from a user." },
       { name: "/blacklist", value: "Add a word to the blacklist." },
       { name: "/whitelist", value: "Remove a word from the blacklist." },
-      { name: "/report", value: "Report a user to the support team." }
+      { name: "/report", value: "Report a user." }
     );
 
   await interaction.reply({ embeds: [embed], ephemeral: true });

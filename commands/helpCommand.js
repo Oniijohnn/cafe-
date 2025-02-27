@@ -9,7 +9,6 @@ async function handleHelpCommand(interaction) {
   const embed = new EmbedBuilder()
     .setColor(0x00ff00)
     .setTitle("Available Commands")
-    .setDescription("Here are all the commands you can use:")
     .addFields(
       { name: "/test", value: "Manually triggers the welcome message." },
       { name: "/setwelcome", value: "Configure the welcome embed." },

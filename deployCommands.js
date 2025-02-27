@@ -11,6 +11,7 @@ dotenv.config();
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const TOKEN = process.env.TOKEN;
+const GUILD_ID = process.env.GUILD_ID; // Add this line to get GUILD_ID from environment variables
 
 const rest = new REST({ version: '9' }).setToken(TOKEN);
 
@@ -34,11 +35,11 @@ const commands = [
 
     // Register new commands
     await rest.put(
-      Routes.applicationCommands(CLIENT_ID),
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), // Use applicationGuildCommands
       { body: commands },
     );
 
-    console.log('Successfully reloaded application (/) commands.');
+    console.log('Successfully reloaded guild commands.');
   } catch (error) {
     console.error('Error registering commands:', error);
   }

@@ -225,11 +225,11 @@ async function registerCommands() {
     console.log(JSON.stringify(formattedCommands, null, 2));
 
     await rest.put(
-      Routes.applicationCommands(CLIENT_ID),
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), // Use applicationGuildCommands
       { body: formattedCommands },
     );
 
-    console.log('Successfully registered application commands.');
+    console.log('Successfully registered guild commands.');
   } catch (error) {
     console.error('Error registering commands:', error);
   }
@@ -239,12 +239,12 @@ async function registerCommands() {
   try {
     console.log("Refreshing slash commands...");
     // Clear existing commands
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: [] }); // Use applicationGuildCommands
     // Register new commands
-    await rest.put(Routes.applicationCommands(CLIENT_ID), {
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
       body: formatCommands(commands), 
     });
-    console.log("Slash commands registered!");
+    console.log("Guild commands registered!");
   } catch (error) {
     console.error("Error registering commands:", error);
   }

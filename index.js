@@ -9,6 +9,7 @@ import { welcomeCommands, handleTestCommand, handleSetWelcomeCommand } from "./c
 import { moderationCommands, handleBanCommand, handleTimeoutCommand, handleKickCommand, handleWarnCommand } from "./commands/moderationCommands.js";
 import { blacklistCommands, handleBlacklistCommand, handleWhitelistCommand } from "./commands/blacklistCommands.js";
 import { reportCommand, handleReportCommand } from "./commands/reportCommand.js";
+import { helpCommand, handleHelpCommand } from "./commands/helpCommand.js";
 import formatCommands from "./formatCommands.js";
 
 dotenv.config(); // Load environment variables
@@ -208,6 +209,7 @@ const commands = [
   ...moderationCommands,
   ...blacklistCommands,
   reportCommand,
+  helpCommand,
 ];
 
 // Log the full structure of commands
@@ -659,29 +661,7 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
   } else if (interaction.commandName === "help") {
-    const guild = interaction.guild;
-    const serverName = guild.name;
-    const serverIcon = guild.iconURL({ format: "png", dynamic: true, size: 512 });
-
-    const embed = new EmbedBuilder()
-      .setColor(0xd2b3b3)
-      .setTitle("Bot Commands and Features")
-      .setDescription("Here are all the commands and features of the bot:")
-      .addFields(
-        { name: "/test 🛡️", value: "Manually triggers the welcome message." },
-        { name: "/setwelcome 🛡️", value: "Configure the welcome embed." },
-        { name: "/post 🛡️", value: "Post a message in a selected channel." },
-        { name: "/ban 🛡️", value: "Ban a user from the server and optionally delete their messages from the last 7 days." },
-        { name: "/timeout 🛡️", value: "Timeout a user from the server for a specified duration." },
-        { name: "/kick 🛡️", value: "Kick a user from the server." },
-        { name: "/warn 🛡️", value: "Warn a user." },
-        { name: "/afk-remove 🛡️", value: "Remove AFK status from a user." },
-        { name: "/afk", value: "Set your status to AFK." },
-        { name: "/report", value: "Report a user to the support team." }
-      )
-      .setFooter({ text: serverName, iconURL: serverIcon });
-
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+    await handleHelpCommand(interaction);
   } else if (interaction.commandName === "report") {
     const reportedUser = interaction.options.getUser("user");
     const reason = interaction.options.getString("reason");

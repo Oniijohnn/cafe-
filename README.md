@@ -1,2 +1,2 @@
-# cafee
+# cafe
 Cafe official bot.
